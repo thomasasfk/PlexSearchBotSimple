@@ -1,0 +1,9 @@
+{
+    "PASSWORD": "worshyy",
+    "USERS_FILE": "users.json",
+    "TELEGRAM_TOKEN": "994852240:AAFhc6DfRx8ypU9XDGre1Pm_p8lLCCA8ybE",
+    "JACKETT_API_KEY": "8lh8lechadz8rtlhdx5tct9d0ab6cew0",
+    "JACKETT_URL": "https://gegenees.feralhosting.com/fizz/jackett/api/v2.0/indexers/all/results",
+    "RU_TORRENT_URL": "https://gegenees.feralhosting.com/fizz/rutorrent/php/addtorrent.php",
+    "RU_TORRENT_TOKEN": "Zml6ejprTnpyTGJrZDJ6bHp4Zm9X"
+}
