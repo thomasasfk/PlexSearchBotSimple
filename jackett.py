@@ -4,7 +4,7 @@ import requests
 from requests.exceptions import Timeout
 
 
-def search(query, user_id, memory_database, config):
+def search(query, config):
     params = (
         ('apikey', config.get('JACKETT_API_KEY')),
         ('Query', query),
@@ -30,10 +30,7 @@ def search(query, user_id, memory_database, config):
     if not response.ok:
         return response.status_code
 
-    results = response.json().get('Results', [])
-    if len(results) > 0:
-        return get_str_results(results, user_id, memory_database)
-    return "No results found"
+    return response.json().get('Results', [])
 
 
 def get_str_results(results, user_id, memory_database):
