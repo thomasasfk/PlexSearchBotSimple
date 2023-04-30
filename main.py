@@ -15,7 +15,7 @@ from feral_services import jackett
 from feral_services import ru_torrent
 
 _MEMORY_DATABASE = {}
-_USERS_FILE = os.getenv('USERS_FILE')
+_USERS_FILE = 'users.json'
 _USERS = set(json.load(open(_USERS_FILE)))
 
 
