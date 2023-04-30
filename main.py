@@ -110,7 +110,6 @@ async def get(update: Update, _context):
                 await update.message.reply_text(magnet_upload_result)
                 return
 
-            print('torrent file!!')
             torrent_upload_result = ru_torrent.upload_torrent(
                 url_response.content, result['label'],
             )
