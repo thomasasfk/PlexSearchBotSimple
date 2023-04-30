@@ -131,6 +131,7 @@ def main() -> None:
         CommandHandler('download', download),
         MessageHandler(COMMAND, get),
     ])
+    print('Starting polling!')
     application.run_polling()
 
 
