@@ -1,10 +1,10 @@
 ## Plex Search Bot, but simple
 
-Few years ago I made [PlexSearchBot](https://github.com/thomasasfk/PlexSearchBot), but it was over-engineered and bad, but worked. 
+Few years ago I made [PlexSearchBot](https://github.com/thomasasfk/PlexSearchBot), but it was over-engineered and bad, but worked.
 
 This is a simpler version made to run easily without unnecessary overhead.
 
---- 
+---
 
 Setup:
 
