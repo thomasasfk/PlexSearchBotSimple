@@ -18,7 +18,7 @@ cp .env.example .env
 - Setup venv & requirements
 ```bash
 python -m venv .venv
-. .venv/Scripts/activate
+. .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 - Run the bot
