@@ -19,7 +19,7 @@ def _format_return_url(url):
     return query_params['result[]'][0]
 
 
-def upload_torrent(torrent_file, label):
+def upload_torrent(torrent_file, label, username):
     metadata = bencodepy.decode(torrent_file)
     file_name = urllib.parse.quote(
         metadata[b'info'][b'name'].decode(),  # noqa
@@ -29,7 +29,7 @@ def upload_torrent(torrent_file, label):
         _RU_TORRENT_URL,
         headers=_HEADERS,
         files={'torrent_file': (file_name, torrent_file)},
-        params={'label': label},
+        params={'label': f'{username}, {label}'},
     )
 
     if response.ok:
@@ -37,12 +37,12 @@ def upload_torrent(torrent_file, label):
     return f'Error: {response.status_code}'
 
 
-def upload_magnet(magnet_link, label):
+def upload_magnet(magnet_link, label, username):
     response = requests.post(
         _RU_TORRENT_URL,
         headers=_HEADERS,
-        params={'label': label},
         data={'url': magnet_link},
+        params={'label': f'{username}, {label}'},
     )
 
     if response.ok:
