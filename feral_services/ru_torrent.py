@@ -25,11 +25,14 @@ def upload_torrent(torrent_file, label, username):
         metadata[b'info'][b'name'].decode(),  # noqa
     )
 
+    if username:
+        label = f'{username}, {label}'
+
     response = requests.post(
         _RU_TORRENT_URL,
         headers=_HEADERS,
         files={'torrent_file': (file_name, torrent_file)},
-        params={'label': f'{username}, {label}'},
+        params={'label': label},
     )
 
     if response.ok:
@@ -38,11 +41,14 @@ def upload_torrent(torrent_file, label, username):
 
 
 def upload_magnet(magnet_link, label, username):
+    if username:
+        label = f'{username}, {label}'
+
     response = requests.post(
         _RU_TORRENT_URL,
         headers=_HEADERS,
         data={'url': magnet_link},
-        params={'label': f'{username}, {label}'},
+        params={'label': label},
     )
 
     if response.ok:

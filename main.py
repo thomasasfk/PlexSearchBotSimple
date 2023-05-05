@@ -91,7 +91,12 @@ async def search(update: Update, _context):
 @auth_required
 async def download(update: Update, _context):
     _, magnet = update.message.text.split('/download', 1)
-    magnet_upload_result = ru_torrent.upload_magnet(magnet, 'Manual upload')
+    username = update.effective_user.username or update.effective_user.first_name
+    magnet_upload_result = ru_torrent.upload_magnet(
+        magnet,
+        '/download',
+        username,
+    )
     await update.message.reply_text(magnet_upload_result)
 
 
@@ -115,7 +120,7 @@ async def get(update: Update, _context):
         await update.message.reply_text('No results found')
         return
 
-    username = update.effective_user.username
+    username = update.effective_user.username or update.effective_user.first_name
     if result.get('magnet'):
         magnet_upload_result = ru_torrent.upload_magnet(
             result['magnet'],
@@ -139,7 +144,7 @@ async def get(update: Update, _context):
                 magnet_upload_result = ru_torrent.upload_magnet(
                     url_response.headers['Location'],
                     result['label'],
-                    username
+                    username,
                 )
                 await update.message.reply_text(magnet_upload_result)
                 return
@@ -147,7 +152,7 @@ async def get(update: Update, _context):
             torrent_upload_result = ru_torrent.upload_torrent(
                 url_response.content,
                 result['label'],
-                username
+                username,
             )
             await update.message.reply_text(torrent_upload_result)
             return
