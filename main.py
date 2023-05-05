@@ -73,7 +73,7 @@ async def spaceforce(_update: Update, _context):
 @auth_required
 async def space(_update: Update, _context):
     await _update.message.reply_text(
-        f'Home dir size: {_LINUX_DIR_SIZE / 1024 / 1024 / 1024:.2f} GB',
+        f'Home dir size: {_LINUX_DIR_SIZE / 1024 / 1024 / 1024:.2f}/1000 GB',
     )
 
 
