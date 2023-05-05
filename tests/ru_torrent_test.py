@@ -51,7 +51,7 @@ def test_upload_function(mocker, upload_function, response):
     mocker.patch.object(bencodepy, 'decode')
     mocker.patch.object(urllib.parse, 'quote')
 
-    result = upload_function('file_or_link', 'my_label')
+    result = upload_function('file_or_link', 'my_label', 'my_username')
     if response.ok:
         assert result == ru_torrent._format_return_url(response.url)
     else:

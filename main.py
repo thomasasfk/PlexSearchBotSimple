@@ -115,10 +115,12 @@ async def get(update: Update, _context):
         await update.message.reply_text('No results found')
         return
 
+    username = update.effective_user.username
     if result.get('magnet'):
         magnet_upload_result = ru_torrent.upload_magnet(
             result['magnet'],
             result['label'],
+            username,
         )
         await update.message.reply_text(magnet_upload_result)
         return
@@ -135,13 +137,17 @@ async def get(update: Update, _context):
         with contextlib.suppress(Exception):
             if url_response.status_code == 302:
                 magnet_upload_result = ru_torrent.upload_magnet(
-                    url_response.headers['Location'], result['label'],
+                    url_response.headers['Location'],
+                    result['label'],
+                    username
                 )
                 await update.message.reply_text(magnet_upload_result)
                 return
 
             torrent_upload_result = ru_torrent.upload_torrent(
-                url_response.content, result['label'],
+                url_response.content,
+                result['label'],
+                username
             )
             await update.message.reply_text(torrent_upload_result)
             return
