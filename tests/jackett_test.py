@@ -45,26 +45,6 @@ _SHAWSHANK_RESULTS = [  # noqa
         'DownloadVolumeFactor': 1.0, 'UploadVolumeFac tor': 1.0,
         'Gain': 113.82000160217285,
     },
-    {  # duplicate result for tests noqa
-        'FirstSeen': '0001-01-01T00:00:00',
-        'Tracker': 'IPTorrents', 'TrackerId': 'iptorrents',
-        'CategoryDesc': 'Movies/BluRay', 'BlackholeLink': None,
-        'Title': 'The Shawshank Redemption 1994 REMASTERED 1080p BluRay H264 AAC-LAMA',  # noqa
-        'Guid': 'https://example.com/2',
-        'Link': 'https://example.com',
-        'Details': 'https://example.com',
-        'PublishDate': '2023-04-09T21:55:13.9457906+00:00',
-        'Catego ry': [2050, 100048], 'Size': 2909840384,
-        'Files': None, 'Grabs': 163,
-        'Description': 'Tags: 9.3 1994 Drama 1080p Uploaded by: Lama',
-        'RageID': None, 'TVDBId': None, 'Imdb': None,
-        'TMDb': None, 'Author': None, 'BookTitle': None,
-        'Seeders': 42, 'Peers': 0, 'Poster': None,
-        'InfoHash': None, 'MagnetUri': None,
-        'MinimumRatio': 1.0, 'MinimumSeedTime': 1209600,
-        'DownloadVolumeFactor': 1.0, 'UploadVolumeFac tor': 1.0,
-        'Gain': 113.82000160217285,
-    },
 ]
 
 
@@ -114,7 +94,7 @@ def test_format_and_filter_results(mocker):
 
     assert isinstance(formatted_results, str)
 
-    expected_result_count_str = 'Results (2/3)'
+    expected_result_count_str = 'Results (2/2)'
     expected_returned_results_str = (
         '/get11111 - IPTorrents, Seeds: 42, Peers: 0, Size: 2.71GB\n'
         'The Shawshank Redemption 1994 REMASTERED 1080p BluRay H264 AAC-LAMA\n\n'  # noqa

@@ -43,7 +43,10 @@ def search(query):
         return response.status_code
 
     json_response = response.json()
-    return json_response.get('Results') or []
+    unfiltered_results = json_response.get('Results') or []
+    return [
+        next(group) for _, group in groupby(unfiltered_results, key=lambda x: x['Guid'])
+    ]
 
 
 def format_and_filter_results(results, user_id, memory_database):
@@ -53,13 +56,9 @@ def format_and_filter_results(results, user_id, memory_database):
         reverse=True,
     )[:_TOTAL_RESULTS_TO_RETURN]
 
-    unique_results = [
-        next(group) for _, group in groupby(results_by_top_seeds, key=lambda x: x['Guid'])
-    ]
-
     returned_results = []
     memory_database[user_id] = {}
-    for result in reversed(unique_results):
+    for result in reversed(results_by_top_seeds):
         if result['Seeders'] < 1:
             continue
 
