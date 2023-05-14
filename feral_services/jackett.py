@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import os
 import random
+from itertools import groupby
 
 import requests
 from dotenv import load_dotenv
 from requests.exceptions import Timeout
+
 load_dotenv()
+
+_TOTAL_RESULTS_TO_RETURN = 20
 
 
 def search(query):
@@ -47,11 +51,15 @@ def format_and_filter_results(results, user_id, memory_database):
         results,
         key=lambda k: k.get('Seeders'),
         reverse=True,
-    )[:25]
+    )[:_TOTAL_RESULTS_TO_RETURN]
+
+    unique_results = [
+        next(group) for _, group in groupby(results_by_top_seeds, key=lambda x: x['Guid'])
+    ]
 
     returned_results = []
     memory_database[user_id] = {}
-    for result in reversed(results_by_top_seeds):
+    for result in reversed(unique_results):
         if result['Seeders'] < 1:
             continue
 
