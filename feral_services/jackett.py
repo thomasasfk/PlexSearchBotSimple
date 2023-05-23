@@ -44,9 +44,8 @@ def search(query):
 
     json_response = response.json()
     unfiltered_results = json_response.get('Results') or []
-    return [
-        next(group) for _, group in groupby(unfiltered_results, key=lambda x: x['Guid'])
-    ]
+    unique_results_by_guid = {r['Guid']: r for r in unfiltered_results}
+    return list(unique_results_by_guid.values())
 
 
 def format_and_filter_results(results, user_id, memory_database):
