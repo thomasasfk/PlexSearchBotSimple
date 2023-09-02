@@ -61,7 +61,7 @@ def test_search_valid_query(query, expected_output, mocker):
         'Results': expected_output,
     }
 
-    output = jackett.search(query)
+    _, output = jackett.search(query)
 
     assert output == expected_output
 
@@ -77,9 +77,9 @@ def test_search_valid_query(query, expected_output, mocker):
 def test_search_invalid_query(query, exception, error_message, mocker):
     mocker.patch('requests.get').side_effect = exception
 
-    output = jackett.search(query)
+    error, _ = jackett.search(query)
 
-    assert output == error_message
+    assert error == error_message
 
 
 def test_format_and_filter_results(mocker):
