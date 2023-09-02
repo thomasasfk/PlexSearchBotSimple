@@ -14,10 +14,12 @@ from telegram.ext.filters import COMMAND
 
 from feral_services import jackett
 from feral_services import ru_torrent
+from feral_services.instance import execute_command
 
 _MEMORY_DATABASE = {}
 _USERS_FILE = 'users.json'
 _USERS = set(json.load(open(_USERS_FILE)))
+_ADMINS = set(os.getenv('ADMINS').split(','))
 _LINUX_DIR_SIZE = 0
 
 
@@ -26,14 +28,21 @@ def save_user(user_id):
     json.dump(list(_USERS), open(_USERS_FILE, 'w'))
 
 
-def auth_required(func):
-    async def wrapper(update, context):
-        if update.effective_user.id not in _USERS:
-            await update.message.reply_text('Authorise pls')
-            return
-        return await func(update, context)
+def role_required(role_list):
+    def decorator(func):
+        async def wrapper(update, context):
+            if update.effective_user.id not in role_list:
+                await update.message.reply_text('Unauthorized')
+                return
+            return await func(update, context)
 
-    return wrapper
+        return wrapper
+
+    return decorator
+
+
+auth_required = role_required(_USERS)
+admin_required = role_required(_ADMINS)
 
 
 def get_home_size(start_new_thread=True):
@@ -109,33 +118,33 @@ async def get(update: Update, _context):
         await update.message.reply_text('Authorise please')
         return
 
-    _, get_id = update.message.text.split('/get', 1)
     users_data = _MEMORY_DATABASE.get(update.effective_user.id)
     if not users_data:
-        await update.message.reply_text('No results found')
+        await update.message.reply_text('Not a valid item')
         return
 
+    _, get_id = update.message.text.split('/get', 1)
     result = users_data.get(get_id)
     if not result:
-        await update.message.reply_text('No results found')
+        await update.message.reply_text('Not a valid item')
         return
 
     username = update.effective_user.username or update.effective_user.first_name
-    if result.get('magnet'):
+    if magnet := result.get('magnet'):
         magnet_upload_result = ru_torrent.upload_magnet(
-            result['magnet'],
+            magnet,
             result['label'],
             username,
         )
         await update.message.reply_text(magnet_upload_result)
         return
 
-    elif result.get('link'):
-        url_response = requests.get(result['link'], allow_redirects=False)
+    elif link := result.get('link'):
+        url_response = requests.get(link, allow_redirects=False)
         if not url_response.ok:
             await update.message.reply_text(
                 'Something went wrong downloading torrent file. The url was: '
-                f'{result["link"]}',
+                f'{link}',
             )
             return
 
@@ -160,19 +169,29 @@ async def get(update: Update, _context):
     await update.message.reply_text('Something went wrong')
 
 
+@admin_required
+async def sh(update: Update, _context):
+    _, command = update.message.text.split('/sh', 1)
+    output = execute_command(command)
+    await update.message.reply_text(output)
+
+
 def main() -> None:
     application = Application \
         .builder() \
         .token(os.getenv('TELEGRAM_TOKEN')) \
         .build()
-    application.add_handlers([
-        CommandHandler('spaceforce', spaceforce),
-        CommandHandler('space', space),
-        CommandHandler('auth', auth),
-        CommandHandler('search', search),
-        CommandHandler('download', download),
-        MessageHandler(COMMAND, get),
-    ])
+    application.add_handlers(
+        [
+            CommandHandler('spaceforce', spaceforce),
+            CommandHandler('space', space),
+            CommandHandler('auth', auth),
+            CommandHandler('search', search),
+            CommandHandler('download', download),
+            CommandHandler('sh', sh),
+            MessageHandler(COMMAND, get),
+        ]
+    )
 
     print('Getting home size!')
     get_home_size()
