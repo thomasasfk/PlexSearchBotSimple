@@ -89,12 +89,14 @@ async def space(_update: Update, _context):
 @auth_required
 async def search(update: Update, _context):
     _, term = update.message.text.split('/search', 1)
-    results = jackett.search(term)
-    returned_results_str = jackett.format_and_filter_results(
-        results, update.effective_user.id,
-        _MEMORY_DATABASE,
-    ) if results else 'No results found'
-    await update.message.reply_text(returned_results_str)
+    error, results = jackett.search(term)
+    if results:
+        returned_results_str = jackett.format_and_filter_results(
+            results, update.effective_user.id,
+            _MEMORY_DATABASE,
+        )
+        await update.message.reply_text(returned_results_str)
+    await update.message.reply_text(error)
 
 
 @auth_required

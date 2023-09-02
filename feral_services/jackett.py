@@ -13,7 +13,7 @@ load_dotenv()
 _TOTAL_RESULTS_TO_RETURN = 20
 
 
-def search(query):
+def search(query) -> (str, list):
     params = (
         ('apikey', os.getenv('JACKETT_API_KEY')),
         ('Query', query),
@@ -33,19 +33,19 @@ def search(query):
             timeout=(3, 60),
         )
     except Timeout:
-        return 'Jackett timed out'
+        return 'Jackett timed out', None
     except ConnectionError:
-        return "Jackett didn't respond"
+        return "Jackett didn't respond", None
     except Exception:  # noqa
-        return 'Something went wrong'
+        return 'Something went wrong', None
 
     if not response.ok:
-        return response.status_code
+        return response.status_code, None
 
     json_response = response.json()
     unfiltered_results = json_response.get('Results') or []
     unique_results_by_guid = {r['Guid']: r for r in unfiltered_results}
-    return list(unique_results_by_guid.values())
+    return None, list(unique_results_by_guid.values())
 
 
 def format_and_filter_results(results, user_id, memory_database):
