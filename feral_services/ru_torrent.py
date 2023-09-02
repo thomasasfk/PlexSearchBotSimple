@@ -5,8 +5,6 @@ import urllib.parse
 
 import bencodepy
 import requests
-from dotenv import load_dotenv
-load_dotenv()
 
 
 _HEADERS = {'Authorization': f'Basic {os.getenv("RU_TORRENT_TOKEN")}'}

@@ -6,6 +6,7 @@ import os
 import threading
 
 import requests
+from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application
 from telegram.ext import CommandHandler
@@ -15,6 +16,7 @@ from telegram.ext.filters import COMMAND
 from feral_services import jackett
 from feral_services import ru_torrent
 from feral_services.instance import execute_command
+load_dotenv()
 
 _MEMORY_DATABASE = {}
 _USERS_FILE = 'users.json'
@@ -192,7 +194,7 @@ def main() -> None:
             CommandHandler('download', download),
             CommandHandler('sh', sh),
             MessageHandler(COMMAND, get),
-        ]
+        ],
     )
 
     print('Getting home size!')
