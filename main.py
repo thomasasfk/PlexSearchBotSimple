@@ -30,21 +30,24 @@ def save_user(user_id):
     json.dump(list(_USERS), open(_USERS_FILE, 'w'))
 
 
-def role_required(role_list):
-    def decorator(func):
-        async def wrapper(update, context):
-            if update.effective_user.id not in role_list:
-                await update.message.reply_text('Unauthorized')
-                return
-            return await func(update, context)
+def auth_required(func):
+    async def wrapper(update, context):
+        if update.effective_user.id not in _USERS:
+            await update.message.reply_text('Authorise pls')
+            return
+        return await func(update, context)
 
-        return wrapper
-
-    return decorator
+    return wrapper
 
 
-auth_required = role_required(_USERS)
-admin_required = role_required(_ADMINS)
+def admin_required(func):
+    async def wrapper(update, context):
+        if update.effective_user.id not in _ADMINS:
+            await update.message.reply_text('Bad, no admin')
+            return
+        return await func(update, context)
+
+    return wrapper
 
 
 def get_home_size(start_new_thread=True):
