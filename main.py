@@ -21,7 +21,6 @@ load_dotenv()
 _MEMORY_DATABASE = {}
 _USERS_FILE = 'users.json'
 _USERS = set(json.load(open(_USERS_FILE)))
-_ADMINS = set(os.getenv('ADMINS').split(','))
 _LINUX_DIR_SIZE = 0
 
 
@@ -42,7 +41,7 @@ def auth_required(func):
 
 def admin_required(func):
     async def wrapper(update, context):
-        if update.effective_user.id not in _ADMINS:
+        if update.effective_user.id not in os.getenv('ADMINS').split(','):
             await update.message.reply_text('Bad, no admin')
             return
         return await func(update, context)
