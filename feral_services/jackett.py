@@ -2,13 +2,10 @@ from __future__ import annotations
 
 import os
 import random
-from itertools import groupby
 
 import requests
-from dotenv import load_dotenv
 from requests.exceptions import Timeout
 
-load_dotenv()
 
 _TOTAL_RESULTS_TO_RETURN = 20
 
