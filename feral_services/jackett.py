@@ -25,7 +25,7 @@ def search(query) -> (str, list):
 
     try:
         response = requests.get(
-            os.getenv('JACKETT_URL'),
+            os.getenv('JACKETT_URL') + os.getenv('JACKETT_URL_SEARCH'),
             params=params,
             timeout=(3, 60),
         )
