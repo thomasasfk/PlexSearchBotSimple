@@ -1,6 +1,6 @@
 ## Plex Search Bot, but simple [![Tests](https://github.com/thomasasfk/PlexSearchBotSimple/actions/workflows/pytest.yml/badge.svg)](https://github.com/thomasasfk/PlexSearchBotSimple/actions/workflows/pytest.yml)
 
-Few years ago I made [PlexSearchBot](https://github.com/thomasasfk/PlexSearchBot), but it was over-engineered and bad, but worked.
+Few years ago I made [PlexSearchBot](https://github.com/thomasasfk/PlexSearchBot) - it was over-engineered and bad, but worked.
 
 This is a simpler version made to run easily without unnecessary overhead.
 
