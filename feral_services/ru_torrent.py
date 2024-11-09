@@ -1,10 +1,13 @@
 from __future__ import annotations
+from dotenv import load_dotenv
 
 import os
 import urllib.parse
 
 import bencodepy
 import requests
+
+load_dotenv()
 
 
 _HEADERS = {'Authorization': f'Basic {os.getenv("RU_TORRENT_TOKEN")}'}

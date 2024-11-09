@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import json
 import os
+import re
 import threading
 
 import requests
@@ -18,7 +19,8 @@ from feral_services import ru_torrent
 from feral_services.instance import execute_command
 load_dotenv()
 
-_MEMORY_DATABASE = {}
+_RESULTS = {}
+_LAST_RESULT_DICT = {}
 _USERS_FILE = 'users.json'
 _USERS = set(json.load(open(_USERS_FILE)))
 _ADMINS = set(os.getenv('ADMINS').split(','))
@@ -92,16 +94,28 @@ async def space(_update: Update, _context):
 
 
 @auth_required
-async def search(update: Update, _context):
+async def search(update: Update, context):
     _, term = update.message.text.split('/search', 1)
     error, results = jackett.search(term)
-    if results:
-        returned_results_str = jackett.format_and_filter_results(
-            results, update.effective_user.id,
-            _MEMORY_DATABASE,
+    if error or not results:
+        await update.message.reply_text(error)
+        return
+
+    user_id = update.effective_user.id
+    if prior_search_msg_id := _LAST_RESULT_DICT.get(user_id):
+        await context.bot.edit_message_text(
+            chat_id=update.effective_chat.id,
+            message_id=prior_search_msg_id,
+            text=f"Previous search results have expired\. "
+                 f"Use the latest search results below\.",
+            parse_mode='MarkdownV2'
         )
-        await update.message.reply_text(returned_results_str)
-    await update.message.reply_text(error)
+
+    returned_results_str = jackett.format_and_filter_results(
+        results, user_id, _RESULTS,
+    )
+    message = await update.message.reply_text(returned_results_str)
+    _LAST_RESULT_DICT[user_id] = message.message_id
 
 
 @auth_required
@@ -118,6 +132,9 @@ async def download(update: Update, _context):
 
 @auth_required
 async def get(update: Update, _context):
+    if not update.message:
+        return
+
     if not update.message.text.startswith('/get'):
         return
 
@@ -125,7 +142,7 @@ async def get(update: Update, _context):
         await update.message.reply_text('Authorise please')
         return
 
-    users_data = _MEMORY_DATABASE.get(update.effective_user.id)
+    users_data = _RESULTS.get(update.effective_user.id)
     if not users_data:
         await update.message.reply_text('Not a valid item')
         return
