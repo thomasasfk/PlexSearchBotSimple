@@ -54,6 +54,7 @@ def format_and_filter_results(results: list, user_id: int, user_id_to_results: d
 
     returned_results = []
     user_id_to_results[user_id] = {}
+
     for result in reversed(results_by_top_seeds):
         if result['Seeders'] < 1:
             continue
@@ -62,7 +63,6 @@ def format_and_filter_results(results: list, user_id: int, user_id_to_results: d
         count = 0
         while req_id in user_id_to_results[user_id] and count < 5:
             req_id = str(random.randint(10000, 99999))
-
             count += 1
             if count > 4:
                 return 'id collision happened?...'
@@ -75,14 +75,20 @@ def format_and_filter_results(results: list, user_id: int, user_id_to_results: d
             'size': round((result['Size'] / 1024 / 1024 / 1024), 2),
         }
 
-        returned_results.append(
-            f"/get{req_id} - {result['Tracker']}, "
-            f"Seeds: {result['Seeders']}, "
-            f"Peers: {result['Peers']}, "
-            f"Size: {round((result['Size'] / 1024 / 1024 / 1024), 2)}GB\n"
-            f"{result['Title']}",
+        details = (
+            f"└─ {result['Tracker']} | "
+            f"Seeds: {format(result['Seeders'], ',')} | "
+            f"Peers: {format(result['Peers'], ',')} | "
+            f"Size: {format(round(result['Size'] / 1024 / 1024 / 1024, 2), '.2f')} GB"
         )
 
-    result_count_str = f'Results ({len(returned_results)}/{len(results)})'
+        formatted_result = (
+            f"/get{req_id} - {result['Title']}\n"
+            f"{details}"
+        )
+
+        returned_results.append(formatted_result)
+
+    result_count = f"Results ({len(returned_results)}/{len(results)})"
     returned_results_str = '\n\n'.join(returned_results)
-    return f'{result_count_str}\n\n{returned_results_str}'
+    return f"{result_count}\n\n{returned_results_str}"
