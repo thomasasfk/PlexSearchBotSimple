@@ -45,7 +45,7 @@ def search(query) -> (str, list):
     return None, list(unique_results_by_guid.values())
 
 
-def format_and_filter_results(results, user_id, memory_database):
+def format_and_filter_results(results: list, user_id: int, user_id_to_results: dict):
     results_by_top_seeds = sorted(
         results,
         key=lambda k: k.get('Seeders'),
@@ -53,21 +53,21 @@ def format_and_filter_results(results, user_id, memory_database):
     )[:_TOTAL_RESULTS_TO_RETURN]
 
     returned_results = []
-    memory_database[user_id] = {}
+    user_id_to_results[user_id] = {}
     for result in reversed(results_by_top_seeds):
         if result['Seeders'] < 1:
             continue
 
         req_id = str(random.randint(10000, 99999))
         count = 0
-        while req_id in memory_database[user_id] and count < 5:
+        while req_id in user_id_to_results[user_id] and count < 5:
             req_id = str(random.randint(10000, 99999))
 
             count += 1
             if count > 4:
                 return 'id collision happened?...'
 
-        memory_database[user_id][req_id] = {
+        user_id_to_results[user_id][req_id] = {
             'magnet': result['MagnetUri'],
             'link': result['Link'],
             'label': result['Tracker'],
