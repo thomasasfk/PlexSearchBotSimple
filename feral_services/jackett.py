@@ -2,12 +2,33 @@ from __future__ import annotations
 
 import os
 import random
+from dataclasses import dataclass
 
 import requests
 from requests.exceptions import Timeout
 
-
 _TOTAL_RESULTS_TO_RETURN = 20
+
+
+@dataclass
+class TorrentInfo:
+    name: str
+    size: str
+    seeds: int
+    peers: int
+    source: str
+    magnet: str
+    link: str
+
+    def format_response(self, req_id: str | None = None) -> str:
+        prefix = f"/get{req_id} - " if req_id else "Success - "
+        return (
+            f"{prefix}{self.name}\n"
+            f"└─ {self.source} | "
+            f"Seeds: {self.seeds:,} | "
+            f"Peers: {self.peers:,} | "
+            f"Size: {self.size}"
+        )
 
 
 def search(query) -> (str, list):
@@ -54,6 +75,7 @@ def format_and_filter_results(results: list, user_id: int, user_id_to_results: d
 
     returned_results = []
     user_id_to_results[user_id] = {}
+
     for result in reversed(results_by_top_seeds):
         if result['Seeders'] < 1:
             continue
@@ -62,26 +84,22 @@ def format_and_filter_results(results: list, user_id: int, user_id_to_results: d
         count = 0
         while req_id in user_id_to_results[user_id] and count < 5:
             req_id = str(random.randint(10000, 99999))
-
             count += 1
             if count > 4:
                 return 'id collision happened?...'
 
-        user_id_to_results[user_id][req_id] = {
-            'magnet': result['MagnetUri'],
-            'link': result['Link'],
-            'label': result['Tracker'],
-            'title': result['Title'],
-            'size': round((result['Size'] / 1024 / 1024 / 1024), 2),
-        }
-
-        returned_results.append(
-            f"/get{req_id} - {result['Tracker']}, "
-            f"Seeds: {result['Seeders']}, "
-            f"Peers: {result['Peers']}, "
-            f"Size: {round((result['Size'] / 1024 / 1024 / 1024), 2)}GB\n"
-            f"{result['Title']}",
+        torrent_info = TorrentInfo(
+            name=result['Title'],
+            size=f"{round((result['Size'] / 1024 / 1024 / 1024), 2)} GB",
+            seeds=result['Seeders'],
+            peers=result['Peers'],
+            source=result['Tracker'],
+            magnet=result['MagnetUri'],
+            link=result['Link']
         )
+
+        user_id_to_results[user_id][req_id] = torrent_info
+        returned_results.append(torrent_info.format_response(req_id))
 
     result_count_str = f'Results ({len(returned_results)}/{len(results)})'
     returned_results_str = '\n\n'.join(returned_results)
