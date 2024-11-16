@@ -87,7 +87,28 @@ def test_format_and_filter_results(mocker):
 
     user_id = 12345
     memory_database = {}
-    results = _SHAWSHANK_RESULTS
+
+    results = [
+        {
+            'Title': 'The Shawshank Redemption 1994 REMASTERED 1080p BluRay H264 AAC-LAMA',
+            'Size': 2910237066,  # ~2.71GB
+            'Seeders': 42,
+            'Peers': 0,
+            'Tracker': 'IPTorrents',
+            'MagnetUri': 'magnet:test1',
+            'Link': 'http://test1.com'
+        },
+        {
+            'Title': 'The Shawshank Redemption 1994 REMASTERED 1080p BluRay H264 AAC R4RBG TGx',
+            'Size': 2984725094,  # ~2.78GB
+            'Seeders': 84,
+            'Peers': 15,
+            'Tracker': '1337x',
+            'MagnetUri': 'magnet:test2',
+            'Link': 'http://test2.com'
+        }
+    ]
+
     formatted_results = jackett.format_and_filter_results(
         results, user_id, memory_database,
     )
@@ -96,20 +117,23 @@ def test_format_and_filter_results(mocker):
 
     expected_result_count_str = 'Results (2/2)'
     expected_returned_results_str = (
-        '/get11111 - IPTorrents, Seeds: 42, Peers: 0, Size: 2.71GB\n'
-        'The Shawshank Redemption 1994 REMASTERED 1080p BluRay H264 AAC-LAMA\n\n'  # noqa
-        '/get22222 - 1337x, Seeds: 84, Peers: 15, Size: 2.78GB\n'
-        'The Shawshank Redemption 1994 REMASTERED 1080p BluRay H264 AAC R4RBG TGx'  # noqa
+        '/get11111 - The Shawshank Redemption 1994 REMASTERED 1080p BluRay H264 AAC-LAMA\n'
+        '└─ IPTorrents | Seeds: 42 | Peers: 0 | Size: 2.71 GB\n\n'
+        '/get22222 - The Shawshank Redemption 1994 REMASTERED 1080p BluRay H264 AAC R4RBG TGx\n'
+        '└─ 1337x | Seeds: 84 | Peers: 15 | Size: 2.78 GB'
     )
+
     assert formatted_results.startswith(expected_result_count_str)
     assert expected_returned_results_str in formatted_results
 
     assert len(memory_database) == 1
     assert isinstance(memory_database[user_id], dict)
     assert len(memory_database[user_id]) == 2
-    for req_id, values in memory_database[user_id].items():
+
+    for req_id, torrent_info in memory_database[user_id].items():
         assert isinstance(req_id, str)
-        assert isinstance(values, dict)
-        assert set(values.keys()) == {
-            'magnet', 'link', 'label', 'title', 'size',
-        }
+        assert isinstance(torrent_info, jackett.TorrentInfo)
+        assert all(
+            hasattr(torrent_info, attr)
+            for attr in ['name', 'size', 'seeds', 'peers', 'source', 'magnet', 'link']
+        )

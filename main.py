@@ -16,6 +16,8 @@ from telegram.ext.filters import COMMAND
 from feral_services import jackett
 from feral_services import ru_torrent
 from feral_services.instance import execute_command
+from feral_services.jackett import TorrentInfo
+
 load_dotenv()
 
 _RESULTS = {}
@@ -147,22 +149,23 @@ async def get(update: Update, _context):
         return
 
     _, get_id = update.message.text.split('/get', 1)
-    result = users_data.get(get_id)
+    result: TorrentInfo = users_data.get(get_id)
     if not result:
         await update.message.reply_text('Not a valid item')
         return
 
     username = update.effective_user.username or update.effective_user.first_name
-    if magnet := result.get('magnet'):
+    if magnet := result.magnet:
         magnet_upload_result = ru_torrent.upload_magnet(
             magnet,
-            result['label'],
+            result.source,
             username,
+            result
         )
         await update.message.reply_text(magnet_upload_result)
         return
 
-    elif link := result.get('link'):
+    elif link := result.link:
         url_response = requests.get(link, allow_redirects=False)
         if not url_response.ok:
             await update.message.reply_text(
@@ -171,23 +174,28 @@ async def get(update: Update, _context):
             )
             return
 
-        with contextlib.suppress(Exception):
+        try:
             if url_response.status_code == 302:
                 magnet_upload_result = ru_torrent.upload_magnet(
                     url_response.headers['Location'],
-                    result['label'],
+                    result.source,
                     username,
+                    result
                 )
                 await update.message.reply_text(magnet_upload_result)
                 return
 
             torrent_upload_result = ru_torrent.upload_torrent(
                 url_response.content,
-                result['label'],
+                result.source,
                 username,
+                result
             )
             await update.message.reply_text(torrent_upload_result)
             return
+        except Exception as e:
+            print(e)
+
 
     await update.message.reply_text('Something went wrong')
 

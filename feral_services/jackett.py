@@ -2,12 +2,33 @@ from __future__ import annotations
 
 import os
 import random
+from dataclasses import dataclass
 
 import requests
 from requests.exceptions import Timeout
 
-
 _TOTAL_RESULTS_TO_RETURN = 20
+
+
+@dataclass
+class TorrentInfo:
+    name: str
+    size: str
+    seeds: int
+    peers: int
+    source: str
+    magnet: str
+    link: str
+
+    def format_response(self, req_id: str | None = None) -> str:
+        prefix = f"/get{req_id} - " if req_id else "Success - "
+        return (
+            f"{prefix}{self.name}\n"
+            f"└─ {self.source} | "
+            f"Seeds: {self.seeds:,} | "
+            f"Peers: {self.peers:,} | "
+            f"Size: {self.size}"
+        )
 
 
 def search(query) -> (str, list):
@@ -67,28 +88,19 @@ def format_and_filter_results(results: list, user_id: int, user_id_to_results: d
             if count > 4:
                 return 'id collision happened?...'
 
-        user_id_to_results[user_id][req_id] = {
-            'magnet': result['MagnetUri'],
-            'link': result['Link'],
-            'label': result['Tracker'],
-            'title': result['Title'],
-            'size': round((result['Size'] / 1024 / 1024 / 1024), 2),
-        }
-
-        details = (
-            f"└─ {result['Tracker']} | "
-            f"Seeds: {format(result['Seeders'], ',')} | "
-            f"Peers: {format(result['Peers'], ',')} | "
-            f"Size: {format(round(result['Size'] / 1024 / 1024 / 1024, 2), '.2f')} GB"
+        torrent_info = TorrentInfo(
+            name=result['Title'],
+            size=f"{round((result['Size'] / 1024 / 1024 / 1024), 2)} GB",
+            seeds=result['Seeders'],
+            peers=result['Peers'],
+            source=result['Tracker'],
+            magnet=result['MagnetUri'],
+            link=result['Link']
         )
 
-        formatted_result = (
-            f"/get{req_id} - {result['Title']}\n"
-            f"{details}"
-        )
+        user_id_to_results[user_id][req_id] = torrent_info
+        returned_results.append(torrent_info.format_response(req_id))
 
-        returned_results.append(formatted_result)
-
-    result_count = f"Results ({len(returned_results)}/{len(results)})"
+    result_count_str = f'Results ({len(returned_results)}/{len(results)})'
     returned_results_str = '\n\n'.join(returned_results)
-    return f"{result_count}\n\n{returned_results_str}"
+    return f'{result_count_str}\n\n{returned_results_str}'
