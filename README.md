@@ -1,4 +1,4 @@
-# Plex Search Search Bot Simple [![Tests](https://github.com/thomasasfk/PlexSearchBotSimple/actions/workflows/pytest.yml/badge.svg)](https://github.com/thomasasfk/PlexSearchBotSimple/actions/workflows/pytest.yml)
+# Plex Search Search Bot Simple [![Tests](https://github.com/thomasasfk/PlexSearchBotSimple/actions/workflows/python-tests.yml/badge.svg)](https://github.com/thomasasfk/PlexSearchBotSimple/actions/workflows/python-tests.yml)
 
 A Telegram bot that searches Jackett indexers and uploads to rTorrent. Despite the repository name, this has no Plex integration.
 
