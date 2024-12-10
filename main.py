@@ -32,10 +32,10 @@ async def search(update: Update, context):
     _, term = update.message.text.split("/search", 1)
     error, results = jackett.search(term)
     if error:
-        await update.message.reply_text("No results found")
+        await update.message.reply_text(error)
         return
     elif not results:
-        await update.message.reply_text(error)
+        await update.message.reply_text("No results found")
         return
 
     user_id = update.effective_user.id
