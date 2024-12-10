@@ -43,8 +43,7 @@ async def search(update: Update, context):
         await context.bot.edit_message_text(
             chat_id=update.effective_chat.id,
             message_id=prior_search_msg_id,
-            text=f"Previous search results have expired so"
-                 f" use the latest search results below",
+            text=f"Previous search results have expired so use the latest search results below",
             parse_mode="MarkdownV2"
         )
 
