@@ -98,6 +98,8 @@ async def get(update: Update, _context):
         return
 
     elif link := result.link:
+        SITE = os.getenv('SITE')
+        link.replace(SITE, f"{os.getenv('BASIC')}@{SITE}")
         url_response = requests.get(link, allow_redirects=False)
         if not url_response.ok:
             await update.message.reply_text(
