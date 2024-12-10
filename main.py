@@ -1,151 +1,119 @@
-from __future__ import annotations
-
 import os
-
+from functools import wraps
 import requests
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import Application
-from telegram.ext import CommandHandler
-from telegram.ext import MessageHandler
-from telegram.ext.filters import COMMAND
-
-from feral_services import jackett
-from feral_services import ru_torrent
-from feral_services.jackett import TorrentInfo
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from loguru import logger
+from feral_services import jackett, ru_torrent
 
 load_dotenv()
 
-_RESULTS = {}
-_LAST_RESULT_DICT = {}
-_ADMINS = set(os.getenv("ADMINS").split(","))
+results = {}
+last_results = {}
+admins = set(os.getenv("ADMINS", "").split(","))
 
 
-def admin_required(func):
-    async def wrapper(update, context):
-        if str(update.effective_user.id) in _ADMINS:
+def auth_error_handler(func):
+    @wraps(func)
+    async def wrapper(update: Update, context):
+        try:
+            if str(update.effective_user.id) not in admins:
+                return
             return await func(update, context)
+        except Exception as e:
+            logger.exception(f"Error in {func.__name__}: {str(e)}")
+            await update.message.reply_text("An error occurred")
+
     return wrapper
 
-@admin_required
+
+@auth_error_handler
 async def search(update: Update, context):
-    _, term = update.message.text.split("/search", 1)
-    error, results = jackett.search(term)
-    if error:
-        await update.message.reply_text(error)
-        return
-    elif not results:
-        await update.message.reply_text("No results found")
+    term = update.message.text.removeprefix("/search").strip()
+    error, search_results = jackett.search(term)
+
+    if error or not search_results:
+        await update.message.reply_text(error or "No results found")
         return
 
     user_id = update.effective_user.id
-    if prior_search_msg_id := _LAST_RESULT_DICT.get(user_id):
+    if msg_id := last_results.get(user_id):
         await context.bot.edit_message_text(
             chat_id=update.effective_chat.id,
-            message_id=prior_search_msg_id,
-            text=f"Previous search results have expired so use the latest search results below",
+            message_id=msg_id,
+            text="Previous search results have expired",
             parse_mode="MarkdownV2"
         )
 
-    returned_results_str = jackett.format_and_filter_results(
-        results, user_id, _RESULTS,
-    )
-    message = await update.message.reply_text(returned_results_str)
-    _LAST_RESULT_DICT[user_id] = message.message_id
+    result_str = jackett.format_and_filter_results(search_results, user_id, results)
+    message = await update.message.reply_text(result_str)
+    last_results[user_id] = message.message_id
 
 
-@admin_required
-async def download(update: Update, _context):
-    _, magnet = update.message.text.split("/download", 1)
+@auth_error_handler
+async def download(update: Update, _):
+    magnet = update.message.text.removeprefix("/download").strip()
     username = update.effective_user.username or update.effective_user.first_name
-    magnet_upload_result = ru_torrent.upload_magnet(
-        magnet,
-        "/download",
-        username,
-    )
-    await update.message.reply_text(magnet_upload_result)
+    result = ru_torrent.upload_magnet(magnet, "/download", username)
+    await update.message.reply_text(result)
 
 
-@admin_required
-async def get(update: Update, _context):
-    if not update.message:
+@auth_error_handler
+async def get(update: Update, _):
+    if not (text := update.message.text).startswith("/get"):
         return
 
-    if not update.message.text.startswith("/get"):
-        return
+    user_id = update.effective_user.id
+    user_results = results.get(user_id, {})
+    get_id = text.removeprefix("/get").strip()
 
-    users_data = _RESULTS.get(update.effective_user.id)
-    if not users_data:
-        await update.message.reply_text("Not a valid item")
-        return
-
-    _, get_id = update.message.text.split("/get", 1)
-    result: TorrentInfo = users_data.get(get_id)
-    if not result:
+    if not (result := user_results.get(get_id)):
         await update.message.reply_text("Not a valid item")
         return
 
     username = update.effective_user.username or update.effective_user.first_name
+
     if magnet := result.magnet:
-        magnet_upload_result = ru_torrent.upload_magnet(
-            magnet,
-            result.source,
-            username,
-            result
-        )
-        await update.message.reply_text(magnet_upload_result)
+        upload_result = ru_torrent.upload_magnet(magnet, result.source, username, result)
+        await update.message.reply_text(upload_result)
         return
 
-    elif link := result.link:
-        SITE = os.getenv('SITE')
-        link = link.replace(SITE, f"{os.getenv('BASIC')}@{SITE}")
-        url_response = requests.get(link, allow_redirects=False)
-        if not url_response.ok:
-            await update.message.reply_text(
-                "Something went wrong downloading torrent file. The url was: "
-                f"{link}",
-            )
+    if link := result.link:
+        site = os.getenv('SITE', '')
+        auth_link = link.replace(site, f"{os.getenv('BASIC', '')}@{site}")
+        response = requests.get(auth_link, allow_redirects=False)
+
+        if not response.ok:
+            await update.message.reply_text(f"Download failed. URL: {auth_link}")
             return
 
-        try:
-            if url_response.status_code == 302:
-                magnet_upload_result = ru_torrent.upload_magnet(
-                    url_response.headers["Location"],
-                    result.source,
-                    username,
-                    result
-                )
-                await update.message.reply_text(magnet_upload_result)
-                return
-
-            torrent_upload_result = ru_torrent.upload_torrent(
-                url_response.content,
-                result.source,
-                username,
-                result
+        if response.status_code == 302:
+            upload_result = ru_torrent.upload_magnet(
+                response.headers["Location"], result.source, username, result
             )
-            await update.message.reply_text(torrent_upload_result)
-            return
-        except Exception as e:
-            print(e)
+        else:
+            upload_result = ru_torrent.upload_torrent(
+                response.content, result.source, username, result
+            )
+        await update.message.reply_text(upload_result)
+        return
 
     await update.message.reply_text("Something went wrong")
 
+
 def main() -> None:
-    application = Application \
-        .builder() \
-        .token(os.getenv("TELEGRAM_TOKEN")) \
-        .build()
-    application.add_handlers(
+    app = Application.builder().token(os.getenv("TELEGRAM_TOKEN", "")).build()
+    app.add_handlers(
         [
             CommandHandler("search", search),
             CommandHandler("download", download),
-            MessageHandler(COMMAND, get),
-        ],
+            MessageHandler(filters.COMMAND, get),
+        ]
     )
 
-    print("Starting polling!")
-    application.run_polling()
+    logger.info("Starting bot polling")
+    app.run_polling()
 
 
 if __name__ == "__main__":
