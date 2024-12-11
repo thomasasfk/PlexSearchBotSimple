@@ -50,15 +50,6 @@ async def search(update: Update, context):
     message = await update.message.reply_text(result_str)
     last_results[user_id] = message.message_id
 
-
-@auth_error_handler
-async def download(update: Update, _):
-    magnet = update.message.text.removeprefix("/download").strip()
-    username = update.effective_user.username or update.effective_user.first_name
-    result = ru_torrent.upload_magnet(magnet, "/download", username)
-    await update.message.reply_text(result)
-
-
 @auth_error_handler
 async def get(update: Update, _):
     if not (text := update.message.text).startswith("/get"):
@@ -107,7 +98,6 @@ def main() -> None:
     app.add_handlers(
         [
             CommandHandler("search", search),
-            CommandHandler("download", download),
             MessageHandler(filters.COMMAND, get),
         ]
     )
