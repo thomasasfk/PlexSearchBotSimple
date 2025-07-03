@@ -1,4 +1,4 @@
-# Plex Search Search Bot Simple [![Tests](https://github.com/thomasasfk/PlexSearchBotSimple/actions/workflows/python-tests.yml/badge.svg)](https://github.com/thomasasfk/PlexSearchBotSimple/actions/workflows/python-tests.yml)
+mnvm, its `/# Plex Search Search Bot Simple [![Tests](https://github.com/thomasasfk/PlexSearchBotSimple/actions/workflows/python-tests.yml/badge.svg)](https://github.com/thomasasfk/PlexSearchBotSimple/actions/workflows/python-tests.yml)
 
 A Telegram bot that searches Jackett indexers and uploads to rTorrent. Despite the repository name, this has no Plex integration.
 
@@ -12,11 +12,14 @@ A Telegram bot that searches Jackett indexers and uploads to rTorrent. Despite t
 | `/download [magnet]` | Download using magnet link | `/download magnet:?xt=...` | Authenticated Users |
 | `/space` | Check home directory size | `/space` | Authenticated Users |
 | `/spaceforce` | Force refresh space calculation | `/spaceforce` | Authenticated Users |
-| `/sh [command]` | Execute shell commands | `/sh ls -la` | Admins |
 
 ## Setup
 
-1. **Install Python 3.9.2** (pyenv recommended)
+1. **Install Python 3.12+** and uv package manager
+   ```bash
+   # Install uv
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
 
 2. **Configure Environment**
    ```bash
@@ -26,14 +29,13 @@ A Telegram bot that searches Jackett indexers and uploads to rTorrent. Despite t
 
 3. **Install Requirements**
    ```bash
-   python -m venv .venv
-   . .venv/bin/activate
-   python -m pip install -r requirements.txt
+   # Install dependencies (creates virtual environment automatically)
+   uv sync --dev
    ```
 
 4. **Run**
    ```bash
-   python main.py
+   uv run python main.py
    ```
 
 ## Environment Configuration

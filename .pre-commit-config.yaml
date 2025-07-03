@@ -1,35 +1,21 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.6.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
       - id: debug-statements
-      - id: double-quote-string-fixer
       - id: name-tests-test
-  - repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.9.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.4
     hooks:
-      - id: reorder-python-imports
-        args: [--py37-plus, --add-import, "from __future__ import annotations"]
-  - repo: https://github.com/asottile/add-trailing-comma
-    rev: v2.4.0
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
     hooks:
-      - id: add-trailing-comma
-        args: [--py36-plus]
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.2
-    hooks:
-      - id: pyupgrade
-        args: [--py37-plus]
-  - repo: https://github.com/pre-commit/mirrors-autopep8
-    rev: v2.0.2
-    hooks:
-      - id: autopep8
-  - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
-        args:
-          - --max-line-length=120
+      - id: mypy
+        additional_dependencies: [types-requests]
+        args: [--ignore-missing-imports]
